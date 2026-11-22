@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:," />
+    <title>Kai for Lumia</title>
+    <style>
+      @-ms-viewport { width: device-width; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        background-color: #252529;
+        color: #f2f2f4;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+      }
+      .wrap { max-width: 720px; margin: 0 auto; padding: 14px 12px 32px 12px; }
+
+      /* ----- player stage ----- */
+      .stage {
+        background-color: #101012;
+        border: 1px solid #5a5a61;
+        border-radius: 10px;
+        padding: 8px;
+      }
+      .stage video {
+        display: block;
+        width: 100%;
+        height: auto;
+        background-color: #000;
+      }
+      .now { text-align: center; padding: 16px 6px 0 6px; }
+      .now .epnum {
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 2px;
+        color: #a7a7ae;
+        text-transform: uppercase;
+      }
+      .now .eptitle {
+        font-size: 20px;
+        font-weight: 300;
+        line-height: 1.3;
+        margin-top: 6px;
+      }
+      .resume-note {
+        display: none;
+        margin: 14px auto 0 auto;
+        max-width: 480px;
+        padding: 10px 12px;
+        border: 1px solid #5a5a61;
+        border-radius: 8px;
+        background-color: #17171a;
+        text-align: center;
+        font-size: 14px;
+        line-height: 1.4;
+        color: #d7d7db;
+      }
+      .resume-note.show { display: block; }
+      .resume-note button {
+        display: inline-block;
+        margin-left: 8px;
+        min-height: 36px;
+        padding: 7px 14px;
+        border: 1px solid #5a5a61;
+        border-radius: 8px;
+        background-color: #333338;
+        color: #f2f2f4;
+        font-family: inherit;
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      /* ----- edition toggle ----- */
+      .seg {
+        margin: 18px auto 0 auto;
+        max-width: 340px;
+        border: 1px solid #5a5a61;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .seg button {
+        float: left;
+        width: 50%;
+        min-height: 44px;
+        margin: 0;
+        padding: 11px 6px;
+        border: 0;
+        background-color: #333338;
+        color: #d7d7db;
+        font-family: inherit;
+        font-size: 15px;
+        cursor: pointer;
+      }
+      .seg button.sel { background-color: #e8e8ea; color: #17171a; font-weight: 600; }
+      .seg .clear { clear: both; }
+
+      /* ----- prev / next ----- */
+      .navrow { margin-top: 14px; text-align: center; }
+      .navrow button {
+        min-height: 44px;
+        min-width: 118px;
+        margin: 0 5px;
+        padding: 11px 18px;
+        border: 1px solid #5a5a61;
+        border-radius: 8px;
+        background-color: #333338;
+        color: #f2f2f4;
+        font-family: inherit;
+        font-size: 15px;
+        cursor: pointer;
+      }
+      .navrow button.off { color: #76767e; }
+      .direct { margin-top: 12px; text-align: center; }
+      .direct a {
+        display: inline-block;
+        padding: 10px 12px;
+        min-height: 36px;
+        color: #6cb2f5;
+        font-size: 14px;
+        text-decoration: none;
+      }
+
+      /* ----- error ----- */
+      .errbox {
+        display: none;
+        margin-top: 16px;
+        padding: 16px 14px;
+        border: 1px solid #5a5a61;
+        border-radius: 8px;
+        background-color: #17171a;
+        text-align: center;
+      }
+      .errbox.show { display: block; }
+      .errbox .msg { font-size: 16px; }
+      .errbox button {
+        margin-top: 12px;
+        min-height: 44px;
+        padding: 11px 22px;
+        border: 0;
+        border-radius: 8px;
+        background-color: #0a6cff;
+        color: #fff;
+        font-family: inherit;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      /* ----- saga jump links ----- */
+      .jump { margin-top: 26px; padding-top: 14px; border-top: 1px solid #3c3c42; text-align: center; }
+      .jump a {
+        display: inline-block;
+        padding: 10px 8px;
+        min-height: 36px;
+        color: #6cb2f5;
+        font-size: 14px;
+        text-decoration: none;
+      }
+
+      /* ----- episode list ----- */
+      .saga-head {
+        margin-top: 22px;
+        padding: 10px 4px 8px 4px;
+        border-top: 1px solid #3c3c42;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 2px;
+        color: #a7a7ae;
+        text-transform: uppercase;
+      }
+      .saga-head .range { float: right; letter-spacing: 0; font-weight: 400; }
+      .ep-row {
+        display: block;
+        width: 100%;
+        min-height: 48px;
+        margin: 0;
+        padding: 14px 6px;
+        border: 0;
+        border-bottom: 1px solid #333338;
+        background-color: transparent;
+        color: #f2f2f4;
+        font-family: inherit;
+        font-size: 15px;
+        text-align: left;
+        cursor: pointer;
+      }
+      .ep-row .num {
+        float: left;
+        width: 40px;
+        color: #9a9aa2;
+      }
+      .ep-row .ttl { display: block; margin-left: 40px; line-height: 1.35; }
+      .ep-row.sel { background-color: #33333a; }
+      .ep-row.sel .num { color: #6cb2f5; }
+      .foot {
+        margin-top: 28px;
+        text-align: center;
+        color: #76767e;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+
+      <div class="stage">
+        <video id="player" controls preload="none" src="https://dn801209.us.archive.org/0/items/dbkai/Dragon%20Ball%20Kai%20-%2001.mp4"></video>
+      </div>
+
+      <div class="now">
+        <div class="epnum" id="epNum">Episode 1</div>
+        <div class="eptitle" id="epTitle">Prologue to Battle! The Return of Goku!</div>
+      </div>
+
+      <div class="resume-note" id="resumeNote"><span id="resumeText"></span><button type="button" id="btnRestart">Start over</button></div>
+
+      <div class="seg">
+        <button type="button" id="btnOriginal" class="sel">Original score</button>
+        <button type="button" id="btnFaulconer">Faulconer</button>
+        <div class="clear"></div>
+      </div>
+
+      <div class="navrow">
+        <button type="button" id="btnPrev" class="off">Previous</button>
+        <button type="button" id="btnNext">Next</button>
+      </div>
+
+      <div class="direct">
+        <a id="directLink" href="https://dn801209.us.archive.org/0/items/dbkai/Dragon%20Ball%20Kai%20-%2001.mp4">Open the MP4 directly</a>
+      </div>
+
+      <div class="errbox" id="errBox">
+        <div class="msg" id="errMsg">Episode 1 didn&rsquo;t play.</div>
+        <button type="button" id="btnRetry">Try Again</button>
+      </div>
+
+      <div class="jump" id="jumpNav"></div>
+
+      <div id="list"></div>
+
+      <div class="foot">Dragon Ball Z Kai &middot; 167 episodes<br />Streams from archive.org</div>
+
+    </div>
+
+    <script type="text/javascript">
+      var TITLES = {"1":"Prologue to Battle! The Return of Goku!","2":"The Enemy is Goku's Brother?! The Secret of the Mighty Saiyan Warriors","3":"A Life or Death Battle! Goku and Piccolo's Desperate Attack!","4":"Run in the Afterlife, Goku! The One Million Mile Snake Way","5":"Wilderness Survival! A Moonlit Night Awakens Gohan","6":"The End of Snake Way! King Kai's Bizarre Test!","7":"The Battle with Ten-Times Gravity! Goku's Race Against the Clock!","8":"Shenron Appears! The Saiyans Arrive Sooner than Expected!","9":"Yamcha's Struggle! The Terrible Saibamen!","10":"Sit Tight, Chiaotzu! Tien's Screaming Tri-Beam!","11":"Will Goku Make it in Time?! Three Hours Until the Battle Resumes!","12":"Farewell, Piccolo! Goku's Furious Counterattack!","13":"The Power of the Kaio-Ken! Goku vs. Vegeta!","14":"An All-Out Kamehame-Ha! Vegeta's Terrible Transformation!","15":"Goku on the Ropes! Pin Your Hopes on the Spirit Bomb!","16":"Defeat the Invincible Vegeta! Work a Miracle, Gohan!","17":"Dawn of the Fierce Battle! The Star of Hope is Piccolo's Homeland!","18":"The Ship Resting in Yunzabit! Time to Blast Off for Planet Namek!","19":"A Powerful New Foe! Frieza, Ruler of the Universe!","20":"The Rebellion Against Frieza! Vegeta's Burning Ambition!","21":"Protect the Dragon Balls! The Namekians' All-Out Attack!","22":"Dodoria's Terrifying Chase! A Truth Revealed to Vegeta!","23":"Vegeta's Covert Maneuvers! A Tragic Assault on the Namekians!","24":"Friends Reborn! Zarbon's Hideous Transformation!","25":"Power Up, Krillin! Frieza's Mounting Apprehension!","26":"The Scheme Is Shattered! Vegeta Strikes Back at Zarbon!","27":"A Touch-and-Go Situation! Gohan, Protect the Four-Star Ball!","28":"The Countdown to Battle Begins! Enter, The Ginyu Force!","29":"First Up for the Ginyu Force! Guldo\u2019s Time Freeze!","30":"The Nightmare Recoome! Come Out and Play, Vegeta!","31":"Goku Arrives At Last! Take Down the Ginyu Force!","32":"The Star Player Appears! Ginyu vs. Goku!","33":"Full Power, Goku! Captain Ginyu\u2019s Desperate Attack!","34":"Surprise! Goku is Ginyu and Ginyu is Goku!?","35":"Goku\u2019s Comeback! Call Forth Porunga!","36":"Frieza Closes In! Mighty Porunga, Grant Our Wish!","37":"A Nightmare Transformation! Frieza's Power Level-One Million!?","38":"Frieza Bares His Fangs! Gohan's Overwhelming Attack","39":"Piccolo Reborn! Frieza's Second Transformation","40":"Frieza's Final Transformation: The Ultimate Nightmare Begins","41":"The Moment of Truth Approaches! Goku Back in Action!","42":"Defeat Frieza, Goku! The Tears of the Proud Saiyan Prince!","43":"Goku vs. Frieza! The Super Showdown Begins!","44":"A Boundary-Pushing Brawl! Goku, Frieza, and Ginyu Again?","45":"Kaio-Ken Times Twenty! An All-Or-Nothing Kamehame-Ha!","46":"The Final Trump Card! Goku's Ultimate Spirit Bomb!","47":"Awaken, Legendary Warrior! Goku the Super Saiyan!","48":"The Angry Super Saiyan! Goku Throws Down the Gauntlet!","49":"Avenge the Fallen, Goku! Countdown to the Planet's Destruction!","50":"Full Power Frieza! Shenron, Grant Our Wish!","51":"Goku's Furious Roar! A Last-Minute Wish!","52":"Duel on a Vanishing Planet! The Final Showdown!","53":"Goku's Final Attack! Countdown to Planet Namek's Destruction!","54":"Goku Vanishes Into Space! Welcome Home, Super Warriors!","55":"There Is Planet Earth, Father! Frieza and King Cold Strike Back!","56":"I Will Defeat Frieza! Another Super Saiyan!","57":"Welcome Back, Goku! Confessions of the Mysterious Youth, Trunks!","58":"Goku's New Move, Instant Transmission! The Three-Year Training Session Begins!","59":"Undetectable Monsters! The Androids Appear!","60":"The Unbeatable Enemy Within! Goku vs. Android 19!","61":"No Victory for Android 19! Enter Super Vegeta!","62":"Piccolo's Assault! Android 20 and the Twisted Future!","63":"The Hunt for Doctor Gero! Discover the Hidden Laboratory!","64":"Number 17 and Number 18! The Androids Awaken!","65":"A Sweet Face and Super Power?! Android 18 vs Vegeta!","66":"The Time for Reunification Has Come! Piccolo's Unshakeable Resolve!","67":"Another Time Machine?! Bulma Uncovers a Mystery!","68":"The Monster Goes into Motion... Strike of the Super Namekian!","69":"I Am Your Brother! The Monster With Goku's Energy!","70":"The Dizzying Deception and the Daring Escape! Defeat the Android Cell!","71":"The Hunt for Cell Is On! Goku, Back in Action!","72":"Break the Super Saiyan Barrier! Into the Hyperbolic Time Chamber!","73":"The Super Namekian Powers Up! Piccolo vs. Android 17!","74":"Run Android 17! Piccolo's All-or-Nothing Struggle!","75":"Power Unknown! Android 16 Breaks His Silence!","76":"Tien's Desperate Attack! Save Your Friends, Goku!","77":"Beyond Super Saiyan! Vegeta Confronts the Monster Cell!","78":"Cell on the Verge of Defeat! Krillin, Destroy Android 18!","79":"The Battle Turns for the Worst... Cell Attacks Android 18!","80":"The Tables Are Turned! Witness the Power of Perfection!","81":"Vegeta's Final Push! Defeat the Invincible Cell!","82":"The Strongest Super Saiyan! Trunks' Power Unleashed!","83":"Cell Invades the Airwaves! Announcing, The Cell Games","84":"Training Complete! Goku Sizes Up the Competition!","85":"The Truce is Broken! The Defense Force Strikes Back at Cell!","86":"A New Guardian! The Return of the Dragon Balls!","87":"Mr. Satan Takes the Stage! The Curtain Rises on the Cell Games","88":"Showdown! Cell vs. Goku!","89":"Battle at the Highest Level! Goku Goes All Out!","90":"The Opening Round Is Concluded! Goku's Moment of Decision!","91":"Get Angry, Gohan! Release Your Hidden Power!","92":"Tears For An Android! Gohan's Inner Rage Bursts Forth!","93":"Unleash the Warrior Within! Gohan Takes the Offensive!","94":"Perfection's End! A Fury, Beyond Super Saiyan!","95":"A Hero's Sacrifice! Last Chance to Save the World!","96":"Combine Your Strength! The Final Kamehame-Ha!","97":"A Bittersweet Victory! Until We Meet Again!","98":"Peace For the Future! The Spirit of Goku is Forever!","99":"Seven Years Later! Starting Today, Gohan Is a High School Student","100":"A New Hero, Great Saiyaman, is Born!","101":"Videl's Crisis? Gohan's Urgent Call-out!","102":"A Monster is Taken Away! The Culprit is Great Saiyaman?","103":"Entering the World Martial Arts Tournament! Goten Shows Off His Explosive Power During Training!","104":"Gohan the Teacher! Videl's Flying Technique Tutorial","105":"The Dragon Team Fully Assembled! Goku Has Come Back!","106":"Who Is the World's Greatest? The Tournament Preliminaries Begin!","107":"Everyone is Surprised! Goten and Trunks\u2019 Super Battle!!","108":"The Junior Champ Is Finally Decided! Who Will Fight Against Mr. Satan?","109":"Restless Foreboding. A Mysterious Warrior Appears!","110":"What Happened, Piccolo? An Unexpected Outcome in the\u00a0First Round","111":"An Eerie Entity, Who Exactly Is Spopovitch?","112":"Videl Battered! Gohan's Fury Reaches Its Limit!","113":"A Creeping Conspiracy! The Target Is Gohan!","114":"The Terrifying Secret of the Majin. The Mastermind Revealed!","115":"The Nefarious Wizard Babidi and Demon King Dabura's Trap","116":"Don't Sell Super Saiyans Short! Vegeta and Goku's Full-Bore Power!","117":"Whither Victory? A Battle Royal Championship Match!","118":"Stunning Youngsters! No. 18's Uphill Battle","119":"Enter the Headliner! The Looming Demon King!","120":"A Heart of Evil Awakened; Vegeta, Prince of Destruction","121":"I am the Strongest! The Clash of Goku vs. Vegeta","122":"Countdown to Revival - Crush Babidi\u2019s Ambitions!","123":"The Seal is Released!? Gohan's Kamehame-Ha of Resistance","124":"Straightaway Into Despair? The Terror of Majin Buu","125":"Turn Into Candy! A Hungry Majin's Bizarre Power!","126":"I Will Deal With the Majin! Vegeta's Final Mortal Combat!","127":"For His Beloved Ones... The End of the Proud Warrior!","128":"A Nightmare Revisited: The Immortal Monster Majin Buu!","129":"A Secret Plan to Defeat Buu! Its Name is Fusion","130":"Found! A Ray of Hope! Awaken, Warriors!","131":"Find the Nuisances: Babidi's Retaliation Begins!","132":"A Time of Trials! Lay Hold of Legendary Powers!","133":"Hold Majin Buu in Check! Limit: Super Saiyan 3!","134":"True Worth Beginning to Show The Treacherous Buu!","135":"Silly Looking? Drilling the Fusion Pose!","136":"Bye-bye, Everyone! Goku Returns to the Next World","137":"Gohan Located! Intensive Training in the World of the Kais!","138":"Birth of a Merged Superwarrior His Name is Gotenks!","139":"Who Will Defeat Majin Buu? The Mightiest of Men Moves Out!","140":"The Powering Up Continues? Super Gotenks is Achieved!","141":"What Anger Gives Rise To Another Majin","142":"Buu Gobbles Up Buu! Onslaught of a New Majin!","143":"Headlong Rush Into Catastrophe! A One-Hour Time Limit!","144":"Training Complete! You're Finished Now, Majin Buu!","145":"Eliminating Buu with Ghosts: A Knockout Kamikaze Attack!","146":"Gotenks' Ace in the Hole! Transformation! Super Saiyan 3!","147":"On a Roll! Buu-Buu-Volleyball!","148":"Thanks for Waiting, Everyone! A Reborn Gohan Heads for Earth!","149":"Buu Overwhelmed! Ultimate Gohan's Super Power!","150":"Buu's Sinister Scheme: Gotenks is Absorbed","151":"The Elder Kai's Brainstorm! Return to Life, Goku","152":"Miracles Happen Once... Will Goku and He Make the Ultimate Combination?","153":"Invincible! The Ultimate Warrior Vegetto","154":"Buu's Ace in the Hole! The Warriors Are Absorbed!","155":"Rescue Gohan and the Others! Goku and Vegeta's Infiltration Mission!","156":"Emergency Escape from the Body! Buu's Retrogression Into Evil!","157":"Earth Destroyed! The Initial Buu's Nefarious Strike","158":"A Final Showdown at the Summit! Face-Off in the World of the Kais!","159":"Hang In There, Kakarot! You Are No. 1!","160":"A One-Minute Match-Up! Vegeta's Life-Threatening Stall for Time!","161":"An Inspired Strategy Make Two Wishes Come True!","162":"Share Your Spirit Energy with Me! I'm Making a Huge Spirit Bomb!","163":"You Are the Savior of the World! Everybody's Spirit Bomb Completed!","164":"You Really Are the Greatest, Goku!! The Demise of Majin Buu","165":"Peace Returns! A Time of Rest for the Warriors!","166":"And So, Ten Years Later... A Long-Awaited World Martial Arts Tournament!","167":"Even Stronger! Goku's Dream is Never-Ending!"};
+      var FAULC_FILES = {"1":"Season 1 - The Saiyan Saga/Episode 1, Prologue to Battle! The Return of Goku!.mp4","2":"Season 1 - The Saiyan Saga/Episode 2, The Enemy is Goku's Brother! The Secret of the Mighty Saiyan Warriors.mp4","3":"Season 1 - The Saiyan Saga/Episode 3, A Life or Death Battle! Goku and Piccolo's Desperate Attack!.mp4","4":"Season 1 - The Saiyan Saga/Episode 4, Run in the Afterlife Goku! The One Million Mile Snake Way! .mp4","5":"Season 1 - The Saiyan Saga/Episode 5, Wilderness Survival! A Moonlit Night Awakens Gohan!.mp4","6":"Season 1 - The Saiyan Saga/Episode 6, The End of Snake Way! King Kai's Bizarre Test!.mp4","7":"Season 1 - The Saiyan Saga/Episode 7, The Battle with Ten-Times Gravity! Goku's Race Against the Clock!.mp4","8":"Season 1 - The Saiyan Saga/Episode 8, Shenron Appears! The Saiyans Arrive Sooner than Expected!.mp4","9":"Season 1 - The Saiyan Saga/Episode 9, Yamcha's Struggle! The Terrible Saibamen!.mp4","10":"Season 1 - The Saiyan Saga/Episode 10, Sit Tight Chiaotzu! Tien's Screaming Tri-Beam!.mp4","11":"Season 1 - The Saiyan Saga/Episode 11, Will Goku Make it in Time! Three Hours Until the Battle Resumes!.mp4","12":"Season 1 - The Saiyan Saga/Episode 12, Farewell Piccolo! Goku's Furious Counterattack!.mp4","13":"Season 1 - The Saiyan Saga/Episode 13, The Power of the Kaio-Ken vs. Vegeta!.mp4","14":"Season 1 - The Saiyan Saga/Episode 14, An All-Out Kamehame-Ha! Vegeta's Terrible Transformation!.mp4","15":"Season 1 - The Saiyan Saga/Episode 15, Goku on the Ropes! Pin Your Hopes on the Spirit Bomb!.mp4","16":"Season 1 - The Saiyan Saga/Episode 16, Defeat the Invincible Vegeta! Work a Miracle, Gohan!.mp4","17":"Season 1 - The Saiyan Saga/Episode 17, Dawn of the Fierce Battle! The Star of Hope is Piccolo's Homeland!.mp4","18":"Season 2 - The Namek Saga/Episode 18, The Ship Resting in Yunzabit! Time to Blast Off for Planet Namek!.mp4","19":"Season 2 - The Namek Saga/Episode 19, A Powerful New Foe! Frieza, Ruler of the Universe!.mp4","20":"Season 2 - The Namek Saga/Episode 20, The Rebellion Against Frieza! Vegeta's Burning Ambition!.mp4","21":"Season 2 - The Namek Saga/Episode 21, Protect the Dragon Balls! The Namekians' All-Out Attack!.mp4","22":"Season 2 - The Namek Saga/Episode 22, Dodoria's Terrifying Chase! A Truth Revealed to Vegeta!.mp4","23":"Season 2 - The Namek Saga/Episode 23, Vegeta's Covert Maneuvers! A Tragic Assault on the Namekians!.mp4","24":"Season 2 - The Namek Saga/Episode 24, Friends Reborn! Zarbon's Hideous Transformation!.mp4","25":"Season 2 - The Namek Saga/Episode 25, Power Up Krillin! Frieza's Mounting Apprehension!.mp4","26":"Season 2 - The Namek Saga/Episode 26, The Scheme Is Shattered! Vegeta Strikes Back at Zarbon!.mp4","27":"Season 2 - The Namek Saga/Episode 27, A Touch-and-Go Situation! Gohan, Protect the Four-Star Ball!.mp4","28":"Season 2 - The Namek Saga/Episode 28, The Countdown to Battle Begins! Enter, The Ginyu Force!.mp4","29":"Season 2 - The Namek Saga/Episode 29, First Up for the Ginyu Force! Guldo's Time Freeze!.mp4","30":"Season 2 - The Namek Saga/Episode 30, The Nightmare Recoome! Come Out and Play, Vegeta!.mp4","31":"Season 2 - The Namek Saga/Episode 31, Goku Arrives At Last! Take Down the Ginyu Force!.mp4","32":"Season 2 - The Namek Saga/Episode 32, The Star Player Appears! Ginyu vs Goku!.mp4","33":"Season 2 - The Namek Saga/Episode 33, Full Power Goku! Captain Ginyu's Desperate Attack!.mp4","34":"Season 2 - The Namek Saga/Episode 34, Surprise! Goku is Ginyu and Ginyu is Goku!.mp4","35":"Season 2 - The Namek Saga/Episode 35, Goku's Comeback! Call Forth Porunga!.mp4","36":"Season 2 - The Namek Saga/Episode 36, Frieza Closes In! Mighty Porunga, Grant Our Wish!.mp4","37":"Season 3 - The Frieza Saga/Episode 37, A Nightmare Transformation! Frieza's Power Level-One Million!.mp4","38":"Season 3 - The Frieza Saga/Episode 38, Frieza Bares His Fangs! Gohan's Overwhelming Attack!.mp4","39":"Season 3 - The Frieza Saga/Episode 39, Piccolo Reborn! Frieza's Second Transformation.mp4","40":"Season 3 - The Frieza Saga/Episode 40, Frieza's Final Transformation! The Ultimate Nightmare Begins!.mp4","41":"Season 3 - The Frieza Saga/Episode 41, The Moment of Truth Approaches! Goku Back in Action!.mp4","42":"Season 3 - The Frieza Saga/Episode 42, Defeat Frieza Goku! The Tears of the Proud Saiyan Prince!.mp4","43":"Season 3 - The Frieza Saga/Episode 43, Goku vs. Frieza! The Super Showdown Begins!.mp4","44":"Season 3 - The Frieza Saga/Episode 44, A Boundary-Pushing Brawl! Goku, Frieza, and Ginyu Again!.mp4","45":"Season 3 - The Frieza Saga/Episode 45, Kaio-Ken Times Twenty! An All-Or-Nothing Kamehame-Ha!.mp4","46":"Season 3 - The Frieza Saga/Episode 46, The Final Trump Card! Goku's Ultimate Spirit Bomb!.mp4","47":"Season 3 - The Frieza Saga/Episode 47, Awaken Legendary Warrior! Goku the Super Saiyan!.mp4","48":"Season 3 - The Frieza Saga/Episode 48, The Angry Super Saiyan! Goku Throws Down the Gauntlet!.mp4","49":"Season 3 - The Frieza Saga/Episode 49, Avenge the Fallen Goku! Countdown to the Planet's Destruction!.mp4","50":"Season 3 - The Frieza Saga/Episode 50, Full Power Frieza! Shenron, Grant Our Wish!.mp4","51":"Season 3 - The Frieza Saga/Episode 51, Goku's Furious Roar! A Last-Minute Resurrection Wish!.mp4","52":"Season 3 - The Frieza Saga/Episode 52, Duel on a Vanishing Planet! The Final Showdown!.mp4","53":"Season 3 - The Frieza Saga/Episode 53, Goku's Final Attack! Countdown to Planet Namek's Destruction!.mp4","54":"Season 3 - The Frieza Saga/Episode 54, Goku Vanishes Into Space! Welcome Home, Super Warriors!.mp4","55":"Season 3 - The Frieza Saga/Episode 55, There Is Planet Earth Father! Frieza and King Cold Strike Back!.mp4","56":"Season 3 - The Frieza Saga/Episode 56, I Will Defeat Frieza! Another Super Saiyan!.mp4","57":"Season 4 - The Android Saga/Episode 57, Welcome Back Goku! Confessions of the Mysterious Youth, Trunks!.mp4","58":"Season 4 - The Android Saga/Episode 58, Goku's New Move! Instant Transmission! The Three-Year Training Session Begins!.mp4","59":"Season 4 - The Android Saga/Episode 59, Undetectable Monsters! The Androids Appear!.mp4","60":"Season 4 - The Android Saga/Episode 60, The Unbeatable Enemy Within! Goku vs. Android 19!.mp4","61":"Season 4 - The Android Saga/Episode 61, No Victory for Android 19! Enter Super Vegeta!.mp4","62":"Season 4 - The Android Saga/Episode 62, Piccolo's Assault! Android 20 and the Twisted Future!.mp4","63":"Season 4 - The Android Saga/Episode 63, The Hunt for Doctor Gero! Discover the Hidden Laboratory!.mp4","64":"Season 4 - The Android Saga/Episode 64, Number 17 and Number 18! The Androids Awaken!.mp4","65":"Season 4 - The Android Saga/Episode 65, A Sweet Face and Super Power! Android 18 vs Vegeta!.mp4","66":"Season 4 - The Android Saga/Episode 66, The Time for Reunification Has Come! Piccolo's Unshakeable Resolve!.mp4","67":"Season 4 - The Android Saga/Episode 67, Another Time Machine! Bulma Uncovers a Mystery!.mp4","68":"Season 5 - The Cell Saga/Episode 68, The Monster Goes into Motion... Strike of the Super Namekian!.mp4","69":"Season 5 - The Cell Saga/Episode 69, I Am Your Brother! The Monster With Goku's Energy!.mp4","70":"Season 5 - The Cell Saga/Episode 70, The Dizzying Deception and the Daring Escape! Defeat the Android Cell!.mp4","71":"Season 5 - The Cell Saga/Episode 71, The Hunt for Cell Is On! Goku, Back in Action!.mp4","72":"Season 5 - The Cell Saga/Episode 72, Break the Super Saiyan Barrier! Into the Hyperbolic Time Chamber!.mp4","73":"Season 5 - The Cell Saga/Episode 73, The Super Namekian Powers Up! Piccolo vs. Android 17!.mp4","74":"Season 5 - The Cell Saga/Episode 74, Run Android 17! Piccolo's All-or-Nothing Struggle!.mp4","75":"Season 5 - The Cell Saga/Episode 75, Power Unknown! Android 16 Breaks His Silence!.mp4","76":"Season 5 - The Cell Saga/Episode 76, Tien's Desperate Attack! Save Your Friends, Goku!.mp4","77":"Season 5 - The Cell Saga/Episode 77, Beyond Super Saiyan! Vegeta Confronts the Monster Cell!.mp4","78":"Season 5 - The Cell Saga/Episode 78, Cell on the Verge of Defeat! Krillin, Destroy Android 18!.mp4","79":"Season 5 - The Cell Saga/Episode 79, The Battle Turns for the Worst... Cell Attacks Android 18!.mp4","80":"Season 5 - The Cell Saga/Episode 80, The Tables Are Turned! Witness the Power of Perfection!.mp4","81":"Season 5 - The Cell Saga/Episode 81, Vegeta's Final Push! Defeat the Invincible Cell!.mp4","82":"Season 5 - The Cell Saga/Episode 82, The Strongest Super Saiyan! Trunks' Power Unleashed!.mp4","83":"Season 5 - The Cell Saga/Episode 83, Cell Invades the Airwaves! Announcing, The Cell Games!.mp4","84":"Season 5 - The Cell Saga/Episode 84, Training Complete! Goku Sizes Up the Competition!.mp4","85":"Season 5 - The Cell Saga/Episode 85, The Truce is Broken! The Defense Force Strikes Back at Cell!.mp4","86":"Season 5 - The Cell Saga/Episode 86, A New Guardian! The Return of the Dragon Balls!.mp4","87":"Season 5 - The Cell Saga/Episode 87, Mr. Satan Takes the Stage! The Curtain Rises on the Cell Games!.mp4","88":"Season 5 - The Cell Saga/Episode 88, Showdown! Cell vs. Goku!.mp4","89":"Season 5 - The Cell Saga/Episode 89, Battle at the Highest Level! Goku Goes All Out!.mp4","90":"Season 5 - The Cell Saga/Episode 90, The Opening Round Is Concluded! Goku's Moment of Decision!.mp4","91":"Season 5 - The Cell Saga/Episode 91, Get Angry Gohan! Release Your Hidden Power!.mp4","92":"Season 5 - The Cell Saga/Episode 92, Tears For An Android! Gohan's Inner Rage Bursts Forth!.mp4","93":"Season 5 - The Cell Saga/Episode 93, Unleash the Warrior Within! Gohan Takes the Offensive!.mp4","94":"Season 5 - The Cell Saga/Episode 94, Perfection's End! A Fury, Beyond Super Saiyan!.mp4","95":"Season 5 - The Cell Saga/Episode 95, A Hero's Sacrifice! Last Chance to Save the World!.mp4","96":"Season 5 - The Cell Saga/Episode 96, Combine Your Strength! The Final Kamehame-Ha!.mp4","97":"Season 5 - The Cell Saga/Episode 97, A Bittersweet Victory! Until We Meet Again!.mp4","98":"Season 5 - The Cell Saga/Episode 98, Peace For the Future! The Spirit of Goku is Forever!.mp4","99":"Season 6 - The Buu Saga/Episode 99, Seven Years Later! Starting Today, Gohan Is a High School Student!.mp4","100":"Season 6 - The Buu Saga/Episode 100, A New Hero Great Saiyaman Is Born!.mp4","101":"Season 6 - The Buu Saga/Episode 101, Videl's Crisis Gohan's Urgent Call-out!.mp4","102":"Season 6 - The Buu Saga/Episode 102, A Monster is Taken Away! The Culprit is Great Saiyaman!.mp4","103":"Season 6 - The Buu Saga/Episode 103, Entering the World Martial Arts Tournament! Goten Shows Off His Explosive Power During Training!.mp4","104":"Season 6 - The Buu Saga/Episode 104, Gohan the Teacher! Videl's Flying Technique Tutorial!.mp4","105":"Season 6 - The Buu Saga/Episode 105, The Dragon Team Fully Assembled! Goku Has Come Back!.mp4","106":"Season 6 - The Buu Saga/Episode 106, Who Is the World's Greatest! The Tournament Preliminaries Begin!.mp4","107":"Season 6 - The Buu Saga/Episode 107, Everyone is Surprised! Goten and Trunks' Super Battle!.mp4","108":"Season 6 - The Buu Saga/Episode 108, The Junior Champ Is Finally Decided! Who Will Fight Against Mr. Satan!.mp4","109":"Season 6 - The Buu Saga/Episode 109, Restless Foreboding; A Mysterious Warrior Appears!.mp4","110":"Season 6 - The Buu Saga/Episode 110, What Happened! Piccolo! An Unexpected Outcome in the First Round!.mp4","111":"Season 6 - The Buu Saga/Episode 111, An Eerie Entity; Who Exactly Is Spopovitch.mp4","112":"Season 6 - The Buu Saga/Episode 112, Videl Battered! Gohan's Fury Reaches Its Limit!.mp4","113":"Season 6 - The Buu Saga/Episode 113, A Creeping Conspiracy! The Target is Gohan!.mp4","114":"Season 6 - The Buu Saga/Episode 114, The Terrifying Secret of the Majin; The Mastermind Revealed!.mp4","115":"Season 6 - The Buu Saga/Episode 115, The Nefarious Wizard Babidi And Demon King Dabura's Trap!.mp4","116":"Season 6 - The Buu Saga/Episode 116, Don't Sell Super Saiyans Short! Vegeta and Goku's Full-Bore Power!.mp4","117":"Season 6 - The Buu Saga/Episode 117, Whither Victory A Battle Royal Championship Match!.mp4","118":"Season 6 - The Buu Saga/Episode 118, Stunning Youngsters! No. 18's Uphill Battle!.mp4","119":"Season 6 - The Buu Saga/Episode 119, Enter the Headliner! The Looming Demon King!.mp4","120":"Season 6 - The Buu Saga/Episode 120, A Heart of Evil Awakened; Vegeta, Prince of Destruction!.mp4","121":"Season 6 - The Buu Saga/Episode 121, I am the Strongest! The Clash of Goku vs. Vegeta!.mp4","122":"Season 6 - The Buu Saga/Episode 122, Countdown to Revival Crush Babidi's Ambitions!.mp4","123":"Season 6 - The Buu Saga/Episode 123, The Seal is Released! Gohan's Kamehame-Ha of Resistance.mp4","124":"Season 6 - The Buu Saga/Episode 124, Straightaway Into Despair! The Terror of Majin Buu!.mp4","125":"Season 6 - The Buu Saga/Episode 125, Turn Into Candy! A Hungry Majin's Bizarre Power!.mp4","126":"Season 6 - The Buu Saga/Episode 126 I Will Deal With the Majin! Vegeta's Final Mortal Combat!.mp4","127":"Season 6 - The Buu Saga/Episode 127 For His Beloved Ones... The End of the Proud Warrior!.mp4","128":"Season 6 - The Buu Saga/Episode 128 A Nightmare Revisited! The Immortal Monster Majin Buu!.mp4","129":"Season 6 - The Buu Saga/Episode 129 A Secret Plan to Defeat Buu! Its Name is Fusion!.mp4","130":"Season 6 - The Buu Saga/Episode 130 Found! A Faint Ray of Hope... Awaken, Warriors!.mp4","131":"Season 6 - The Buu Saga/Episode 131 Find the Nuisances! Babidi's Retaliation Begins!.mp4","132":"Season 6 - The Buu Saga/Episode 132 A Time of Trials! Lay Hold of Legendary Powers!.mp4","133":"Season 6 - The Buu Saga/Episode 133 Hold Majin Buu in Check! Limit - Super Saiyan 3!.mp4","134":"Season 6 - The Buu Saga/Episode 134 True Worth Beginning to Show! The Treacherous Buu!.mp4","135":"Season 6 - The Buu Saga/Episode 135 Silly Looking Drilling the Fusion Pose!.mp4","136":"Season 6 - The Buu Saga/Episode 136 Bye-bye, Everyone! Goku Returns to the Next World!.mp4","137":"Season 6 - The Buu Saga/Episode 137 Gohan Located! Intensive Training in the World of the Kais!.mp4","138":"Season 6 - The Buu Saga/Episode 138 Birth of a Merged Superwarrior! His Name is Gotenks!.mp4","139":"Season 6 - The Buu Saga/Episode 139 Who Will Defeat Majin Buu! The Mightiest of Men Moves Out!!.mp4","140":"Season 6 - The Buu Saga/Episode 140 The Powering Up Continues! Super Gotenks is Achieved!.mp4","141":"Season 6 - The Buu Saga/Episode 141 What Anger Gives Rise To Another Majin!.mp4","142":"Season 6 - The Buu Saga/Episode 142 Buu Gobbles Up Buu! Onslaught of a New Majin!.mp4","143":"Season 6 - The Buu Saga/Episode 143 Headlong Rush Into Catastrophe! A One-Hour Time Limit!.mp4","144":"Season 6 - The Buu Saga/Episode 144 Training Complete! You're Finished Now, Majin Buu!.mp4","145":"Season 6 - The Buu Saga/Episode 145 Eliminating Buu with Ghosts A Knockout Kamikaze Attack!.mp4","146":"Season 6 - The Buu Saga/Episode 146 Gotenks' Ace in the Hole! Transformation! Super Saiyan 3!.mp4","147":"Season 6 - The Buu Saga/Episode 147 On a Roll! Buu-Buu-Volleyball!.mp4","148":"Season 6 - The Buu Saga/Episode 148 Thanks for Waiting Everyone! A Reborn Gohan Heads for Earth!.mp4","149":"Season 6 - The Buu Saga/Episode 149 Buu Overwhelmed! Ultimate Gohan's Super Power!.mp4","150":"Season 6 - The Buu Saga/Episode 150 Buu's Sinister Scheme! Gotenks is Absorbed!.mp4","151":"Season 6 - The Buu Saga/Episode 151 The Elder Kai's Brainstorm! Return to Life Goku!.mp4","152":"Season 6 - The Buu Saga/Episode 152 Miracles Happen Once... Will Goku and He Make the Ultimate Combination.mp4","153":"Season 6 - The Buu Saga/Episode 153 Invincible! The Ultimate Warrior Vegito!.mp4","154":"Season 6 - The Buu Saga/Episode 154 Buu's Ace in the Hole! The Warriors Are Absorbed!.mp4","155":"Season 6 - The Buu Saga/Episode 155 Rescue Gohan and the Others! Goku and Vegeta's Infiltration Mission!.mp4","156":"Season 6 - The Buu Saga/Episode 156 Emergency Escape from the Body! Buu's Retrogression Into Evil!.mp4","157":"Season 6 - The Buu Saga/Episode 157 Earth Destroyed! The Initial Buu's Nefarious Strike!.mp4","158":"Season 6 - The Buu Saga/Episode 158 A Final Showdown at the Summit! Face-Off in the World of the Kais!.mp4","159":"Season 6 - The Buu Saga/Episode 159 Hang In There, Kakarot! You Are No. 1!.mp4","160":"Season 6 - The Buu Saga/Episode 160 A One Minute Matchup! Vegeta's Life Threatening Stall for Time!.mp4","161":"Season 6 - The Buu Saga/Episode 161 An Inspired Strategy! Make Two Wishes Come True!.mp4","162":"Season 6 - The Buu Saga/Episode 162 Share Your Spirit Energy with Me! I'm Making a Huge Spirit Bomb!.mp4","163":"Season 6 - The Buu Saga/Episode 163 You Are the Savior of the World! Everybody's Spirit Bomb Completed!.mp4","164":"Season 6 - The Buu Saga/Episode 164 You Really Are the Greatest, Goku!! The Demise of Majin Buu!.mp4","165":"Season 6 - The Buu Saga/Episode 165 Peace Has Returned! It's Time to Party!.mp4","166":"Season 6 - The Buu Saga/Episode 166 And So, Ten Years Later... A Long-Awaited World Martial Arts Tournament!.mp4","167":"Season 6 - The Buu Saga/Episode 167 Even Stronger! Goku's Dream is Never-Ending!.mp4"};
+
+      var SAGAS = [
+        { name: 'Saiyan', from: 1, to: 18 },
+        { name: 'Frieza', from: 19, to: 54 },
+        { name: 'Androids and Cell', from: 55, to: 82 },
+        { name: 'Cell Games', from: 83, to: 98 },
+        { name: 'World Tournament', from: 99, to: 122 },
+        { name: 'Majin Buu', from: 123, to: 140 },
+        { name: 'Evil Buu', from: 141, to: 167 }
+      ];
+      var TOTAL = 167;
+
+      var HOST = 'https://dn801209.us.archive.org/0/items/dbkai/';
+      var FALLBACK_HOST = 'https://archive.org/download/dbkai/';
+      var FAULC_ID = 'Dragon-Ball-Z-Kai-Faulconer-Edition-by-JC-Dragon-Ball';
+      var FAULC_HOST = 'https://ia801006.us.archive.org/0/items/' + FAULC_ID + '/';
+      var FAULC_FALLBACK_HOST = 'https://archive.org/download/' + FAULC_ID + '/';
+
+      var edition = 'original';
+      var current = 1;
+      var triedFallback = false;
+      var rowRefs = {};
+      var RESUME_KEY = 'kaiLumiaResumeV1';
+      var pendingSeek = null;
+      var seekApplied = true;
+      var lastSaveAt = 0;
+      var restoredOnLoad = false;
+
+      var video = document.getElementById('player');
+      var epNum = document.getElementById('epNum');
+      var epTitle = document.getElementById('epTitle');
+      var directLink = document.getElementById('directLink');
+      var errBox = document.getElementById('errBox');
+      var errMsg = document.getElementById('errMsg');
+      var btnPrev = document.getElementById('btnPrev');
+      var btnNext = document.getElementById('btnNext');
+      var btnOriginal = document.getElementById('btnOriginal');
+      var btnFaulconer = document.getElementById('btnFaulconer');
+      var resumeNote = document.getElementById('resumeNote');
+      var resumeText = document.getElementById('resumeText');
+      var btnRestart = document.getElementById('btnRestart');
+
+      function epFile(n) {
+        var nn = (n < 10 ? '0' : '') + n;
+        return 'Dragon%20Ball%20Kai%20-%20' + nn + '.mp4';
+      }
+
+      function encodePath(p) {
+        var parts = p.split('/');
+        var out = [];
+        var i, enc;
+        for (i = 0; i < parts.length; i++) {
+          enc = encodeURIComponent(parts[i]);
+          enc = enc.replace(/'/g, '%27').replace(/!/g, '%21');
+          enc = enc.replace(/\(/g, '%28').replace(/\)/g, '%29');
+          enc = enc.replace(/\*/g, '%2A');
+          out.push(enc);
+        }
+        return out.join('/');
+      }
+
+      function epUrl(n) {
+        if (edition === 'faulconer') return FAULC_HOST + encodePath(FAULC_FILES[n]);
+        return HOST + epFile(n);
+      }
+
+      function epFallbackUrl(n) {
+        if (edition === 'faulconer') return FAULC_FALLBACK_HOST + encodePath(FAULC_FILES[n]);
+        return FALLBACK_HOST + epFile(n);
+      }
+
+      function formatTime(sec) {
+        if (!sec || sec < 0 || isNaN(sec)) sec = 0;
+        sec = Math.floor(sec);
+        var m = Math.floor(sec / 60);
+        var s = sec - (m * 60);
+        return m + ':' + (s < 10 ? '0' : '') + s;
+      }
+
+      function storageAvailable() {
+        try {
+          if (typeof localStorage === 'undefined' || !localStorage) return false;
+          var k = '__kaiLumiaTest__';
+          localStorage.setItem(k, '1');
+          localStorage.removeItem(k);
+          return true;
+        } catch (e) { return false; }
+      }
+      var canStore = storageAvailable();
+
+      function loadResume() {
+        if (!canStore) return null;
+        try {
+          var raw = localStorage.getItem(RESUME_KEY);
+          if (!raw) return null;
+          var data = null;
+          try { data = JSON.parse(raw); } catch (e2) { return null; }
+          if (!data) return null;
+          var ep = parseInt(data.ep, 10);
+          if (isNaN(ep) || ep < 1 || ep > TOTAL) return null;
+          var t = parseFloat(data.t);
+          if (isNaN(t) || t < 0) t = 0;
+          var dur = parseFloat(data.dur);
+          if (isNaN(dur) || dur < 0) dur = 0;
+          var ed = (data.ed === 'faulconer') ? 'faulconer' : 'original';
+          return { ep: ep, t: t, dur: dur, ed: ed };
+        } catch (e) { return null; }
+      }
+
+      function saveResume() {
+        if (!canStore) return;
+        /* Do not overwrite a pending restore with the pre-seek position. */
+        if (pendingSeek !== null && !seekApplied) {
+          try {
+            if (video.currentTime < pendingSeek - 5) return;
+          } catch (e) {}
+        }
+        try {
+          var t = 0;
+          var dur = 0;
+          try { t = video.currentTime || 0; } catch (e1) {}
+          try { dur = video.duration || 0; } catch (e2) {}
+          if (isNaN(t) || t < 0) t = 0;
+          if (isNaN(dur) || dur < 0) dur = 0;
+          var payload = '{"ep":' + current + ',"ed":"' + edition + '","t":' + t + ',"dur":' + dur + '}';
+          localStorage.setItem(RESUME_KEY, payload);
+        } catch (e) {}
+      }
+
+      function saveResumeAt(ep, ed, t) {
+        if (!canStore) return;
+        try {
+          var payload = '{"ep":' + ep + ',"ed":"' + ed + '","t":' + t + ',"dur":0}';
+          localStorage.setItem(RESUME_KEY, payload);
+        } catch (e) {}
+      }
+
+      function hideResumeNote() {
+        resumeNote.className = 'resume-note';
+      }
+
+      function showResumeNote(ep, t) {
+        var msg = 'Resumed Episode ' + ep + ' at ' + formatTime(t) + ' — remembered on this device.';
+        if (resumeText.textContent !== undefined) { resumeText.textContent = msg; }
+        else { resumeText.innerText = msg; }
+        resumeNote.className = 'resume-note show';
+      }
+
+      function applyPendingSeek() {
+        if (pendingSeek === null || seekApplied) return;
+        try {
+          if (video.readyState >= 1) {
+            var target = pendingSeek;
+            var dur = 0;
+            try { dur = video.duration || 0; } catch (e) {}
+            if (dur > 0 && target > dur - 5) target = 0;
+            if (target > 0) {
+              try { video.currentTime = target; } catch (e2) {}
+            }
+            seekApplied = true;
+            pendingSeek = null;
+          }
+        } catch (e) {}
+      }
+
+      function hideError() {
+        errBox.className = 'errbox';
+      }
+
+      function showError() {
+        errMsg.innerHTML = 'Episode ' + current + ' didn&rsquo;t play.';
+        errBox.className = 'errbox show';
+      }
+
+      function markSelected() {
+        var n;
+        for (n = 1; n <= TOTAL; n++) {
+          if (rowRefs[n]) {
+            rowRefs[n].className = (n === current) ? 'ep-row sel' : 'ep-row';
+          }
+        }
+        btnPrev.className = (current <= 1) ? 'off' : '';
+        btnNext.className = (current >= TOTAL) ? 'off' : '';
+      }
+
+      function selectEpisode(n, autoplay, resumeTime) {
+        if (n < 1 || n > TOTAL) return;
+        current = n;
+        triedFallback = false;
+        hideError();
+        if (typeof resumeTime === 'number' && resumeTime > 5 && !isNaN(resumeTime)) {
+          pendingSeek = resumeTime;
+          seekApplied = false;
+        } else {
+          pendingSeek = null;
+          seekApplied = true;
+        }
+        epNum.innerHTML = 'Episode ' + n;
+        var t = TITLES[n] || '';
+        if (epTitle.textContent !== undefined) { epTitle.textContent = t; }
+        else { epTitle.innerText = t; }
+        var url = epUrl(n);
+        directLink.href = url;
+        video.src = url;
+        markSelected();
+        window.scrollTo(0, 0);
+        /* Remember the newly selected episode right away (at its resume point or 0). */
+        if (pendingSeek !== null) { saveResumeAt(n, edition, pendingSeek); }
+        else { saveResumeAt(n, edition, 0); }
+        if (autoplay) {
+          try { video.play(); } catch (e) { /* tap the player to start */ }
+        }
+      }
+
+      function setEdition(ed) {
+        if (ed === edition) return;
+        var wasPlaying = false;
+        var keepTime = 0;
+        try { wasPlaying = !video.paused && !video.ended; } catch (e) {}
+        try { keepTime = video.currentTime || 0; } catch (e2) {}
+        if (pendingSeek !== null && !seekApplied) keepTime = pendingSeek;
+        edition = ed;
+        btnOriginal.className = (ed === 'original') ? 'sel' : '';
+        btnFaulconer.className = (ed === 'faulconer') ? 'sel' : '';
+        hideResumeNote();
+        if (keepTime > 5) { selectEpisode(current, wasPlaying, keepTime); }
+        else { selectEpisode(current, wasPlaying); }
+      }
+
+      function buildList() {
+        var list = document.getElementById('list');
+        var jump = document.getElementById('jumpNav');
+        var s, n;
+        for (s = 0; s < SAGAS.length; s++) {
+          (function (saga) {
+            var anchor = document.createElement('a');
+            anchor.href = '#saga' + saga.from;
+            anchor.innerHTML = saga.name;
+            jump.appendChild(anchor);
+
+            var head = document.createElement('div');
+            head.className = 'saga-head';
+            head.id = 'saga' + saga.from;
+            var range = document.createElement('span');
+            range.className = 'range';
+            range.innerHTML = saga.from + ' &ndash; ' + saga.to;
+            head.appendChild(range);
+            var nameSpan = document.createElement('span');
+            nameSpan.innerHTML = saga.name + ' Saga';
+            head.appendChild(nameSpan);
+            list.appendChild(head);
+
+            for (n = saga.from; n <= saga.to; n++) {
+              (function (num) {
+                var b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'ep-row';
+                var numSpan = document.createElement('span');
+                numSpan.className = 'num';
+                numSpan.innerHTML = num;
+                var ttlSpan = document.createElement('span');
+                ttlSpan.className = 'ttl';
+                var t = TITLES[num] || '';
+                if (ttlSpan.textContent !== undefined) { ttlSpan.textContent = t; }
+                else { ttlSpan.innerText = t; }
+                b.appendChild(numSpan);
+                b.appendChild(ttlSpan);
+                b.onclick = function () { hideResumeNote(); selectEpisode(num, true); };
+                list.appendChild(b);
+                rowRefs[num] = b;
+              })(n);
+            }
+          })(SAGAS[s]);
+        }
+      }
+
+      btnOriginal.onclick = function () { setEdition('original'); };
+      btnFaulconer.onclick = function () { setEdition('faulconer'); };
+      btnPrev.onclick = function () { hideResumeNote(); selectEpisode(current - 1, true); };
+      btnNext.onclick = function () { hideResumeNote(); selectEpisode(current + 1, true); };
+      document.getElementById('btnRetry').onclick = function () {
+        var keep = 0;
+        if (pendingSeek !== null && !seekApplied) keep = pendingSeek;
+        else { try { keep = video.currentTime || 0; } catch (e) {} }
+        if (keep > 5) { selectEpisode(current, true, keep); }
+        else { selectEpisode(current, true); }
+      };
+      btnRestart.onclick = function () {
+        pendingSeek = null;
+        seekApplied = true;
+        hideResumeNote();
+        try { video.currentTime = 0; } catch (e) {}
+        saveResumeAt(current, edition, 0);
+        try { video.play(); } catch (e2) {}
+      };
+
+      video.onerror = function () {
+        if (!video.src) return;
+        if (!triedFallback) {
+          triedFallback = true;
+          video.src = epFallbackUrl(current);
+          try { video.play(); } catch (e) {}
+        } else {
+          showError();
+        }
+      };
+
+      video.onloadedmetadata = function () { applyPendingSeek(); };
+      video.oncanplay = function () { applyPendingSeek(); };
+      video.onseeked = function () { saveResume(); };
+
+      video.ontimeupdate = function () {
+        var nowMs = 0;
+        try { nowMs = new Date().getTime(); } catch (e) {}
+        if (nowMs - lastSaveAt >= 5000) {
+          lastSaveAt = nowMs;
+          saveResume();
+        }
+      };
+
+      video.onpause = function () { saveResume(); };
+      video.onplay = function () { saveResume(); };
+
+      video.onended = function () {
+        if (current < TOTAL) {
+          hideResumeNote();
+          saveResumeAt(current + 1, edition, 0);
+          selectEpisode(current + 1, true);
+        } else {
+          saveResumeAt(current, edition, 0);
+        }
+      };
+
+      if (window.addEventListener) {
+        window.addEventListener('beforeunload', function () { saveResume(); }, false);
+        window.addEventListener('pagehide', function () { saveResume(); }, false);
+      } else if (window.attachEvent) {
+        window.attachEvent('onbeforeunload', function () { saveResume(); });
+      }
+
+      buildList();
+
+      /* ----- restore: episode + timestamp remembered on this device ----- */
+      (function () {
+        var saved = loadResume();
+        if (saved) {
+          var ep = saved.ep;
+          var t = saved.t;
+          var dur = saved.dur;
+          /* Finished (or nearly finished) last time: move on to the next episode. */
+          if (dur > 0 && t > 0 && t >= dur - 15) {
+            if (ep < TOTAL) { ep = ep + 1; }
+            t = 0;
+          }
+          if (saved.ed !== edition) {
+            edition = saved.ed;
+            btnOriginal.className = (edition === 'original') ? 'sel' : '';
+            btnFaulconer.className = (edition === 'faulconer') ? 'sel' : '';
+          }
+          if (ep !== 1 || t > 5 || edition !== 'original') {
+            restoredOnLoad = (t > 5);
+            if (t > 5) { selectEpisode(ep, false, t); showResumeNote(ep, t); }
+            else { selectEpisode(ep, false); }
+            return;
+          }
+        }
+        markSelected();
+      })();
+    </script>
+  </body>
+</html>
