@@ -46,34 +46,6 @@
         line-height: 1.3;
         margin-top: 6px;
       }
-      .resume-note {
-        display: none;
-        margin: 14px auto 0 auto;
-        max-width: 480px;
-        padding: 10px 12px;
-        border: 1px solid #5a5a61;
-        border-radius: 8px;
-        background-color: #17171a;
-        text-align: center;
-        font-size: 14px;
-        line-height: 1.4;
-        color: #d7d7db;
-      }
-      .resume-note.show { display: block; }
-      .resume-note button {
-        display: inline-block;
-        margin-left: 8px;
-        min-height: 36px;
-        padding: 7px 14px;
-        border: 1px solid #5a5a61;
-        border-radius: 8px;
-        background-color: #333338;
-        color: #f2f2f4;
-        font-family: inherit;
-        font-size: 14px;
-        cursor: pointer;
-      }
-
       /* ----- edition toggle ----- */
       .seg {
         margin: 18px auto 0 auto;
@@ -217,8 +189,6 @@
         <div class="eptitle" id="epTitle">Prologue to Battle! The Return of Goku!</div>
       </div>
 
-      <div class="resume-note" id="resumeNote"><span id="resumeText"></span><button type="button" id="btnRestart">Start over</button></div>
-
       <div class="seg">
         <button type="button" id="btnOriginal" class="sel">Original score</button>
         <button type="button" id="btnFaulconer">Faulconer</button>
@@ -288,10 +258,6 @@
       var btnNext = document.getElementById('btnNext');
       var btnOriginal = document.getElementById('btnOriginal');
       var btnFaulconer = document.getElementById('btnFaulconer');
-      var resumeNote = document.getElementById('resumeNote');
-      var resumeText = document.getElementById('resumeText');
-      var btnRestart = document.getElementById('btnRestart');
-
       function epFile(n) {
         var nn = (n < 10 ? '0' : '') + n;
         return 'Dragon%20Ball%20Kai%20-%20' + nn + '.mp4';
@@ -319,14 +285,6 @@
       function epFallbackUrl(n) {
         if (edition === 'faulconer') return FAULC_FALLBACK_HOST + encodePath(FAULC_FILES[n]);
         return FALLBACK_HOST + epFile(n);
-      }
-
-      function formatTime(sec) {
-        if (!sec || sec < 0 || isNaN(sec)) sec = 0;
-        sec = Math.floor(sec);
-        var m = Math.floor(sec / 60);
-        var s = sec - (m * 60);
-        return m + ':' + (s < 10 ? '0' : '') + s;
       }
 
       function storageAvailable() {
@@ -385,17 +343,6 @@
           var payload = '{"ep":' + ep + ',"ed":"' + ed + '","t":' + t + ',"dur":0}';
           localStorage.setItem(RESUME_KEY, payload);
         } catch (e) {}
-      }
-
-      function hideResumeNote() {
-        resumeNote.className = 'resume-note';
-      }
-
-      function showResumeNote(ep, t) {
-        var msg = 'Resumed Episode ' + ep + ' at ' + formatTime(t) + ' — remembered on this device.';
-        if (resumeText.textContent !== undefined) { resumeText.textContent = msg; }
-        else { resumeText.innerText = msg; }
-        resumeNote.className = 'resume-note show';
       }
 
       function applyPendingSeek() {
@@ -474,7 +421,6 @@
         edition = ed;
         btnOriginal.className = (ed === 'original') ? 'sel' : '';
         btnFaulconer.className = (ed === 'faulconer') ? 'sel' : '';
-        hideResumeNote();
         if (keepTime > 5) { selectEpisode(current, wasPlaying, keepTime); }
         else { selectEpisode(current, wasPlaying); }
       }
@@ -517,7 +463,7 @@
                 else { ttlSpan.innerText = t; }
                 b.appendChild(numSpan);
                 b.appendChild(ttlSpan);
-                b.onclick = function () { hideResumeNote(); selectEpisode(num, true); };
+                b.onclick = function () { selectEpisode(num, true); };
                 list.appendChild(b);
                 rowRefs[num] = b;
               })(n);
@@ -528,8 +474,8 @@
 
       btnOriginal.onclick = function () { setEdition('original'); };
       btnFaulconer.onclick = function () { setEdition('faulconer'); };
-      btnPrev.onclick = function () { hideResumeNote(); selectEpisode(current - 1, true); };
-      btnNext.onclick = function () { hideResumeNote(); selectEpisode(current + 1, true); };
+      btnPrev.onclick = function () { selectEpisode(current - 1, true); };
+      btnNext.onclick = function () { selectEpisode(current + 1, true); };
       document.getElementById('btnRetry').onclick = function () {
         var keep = 0;
         if (pendingSeek !== null && !seekApplied) keep = pendingSeek;
@@ -537,15 +483,6 @@
         if (keep > 5) { selectEpisode(current, true, keep); }
         else { selectEpisode(current, true); }
       };
-      btnRestart.onclick = function () {
-        pendingSeek = null;
-        seekApplied = true;
-        hideResumeNote();
-        try { video.currentTime = 0; } catch (e) {}
-        saveResumeAt(current, edition, 0);
-        try { video.play(); } catch (e2) {}
-      };
-
       video.onerror = function () {
         if (!video.src) return;
         if (!triedFallback) {
@@ -575,7 +512,6 @@
 
       video.onended = function () {
         if (current < TOTAL) {
-          hideResumeNote();
           saveResumeAt(current + 1, edition, 0);
           selectEpisode(current + 1, true);
         } else {
@@ -611,7 +547,7 @@
           }
           if (ep !== 1 || t > 5 || edition !== 'original') {
             restoredOnLoad = (t > 5);
-            if (t > 5) { selectEpisode(ep, false, t); showResumeNote(ep, t); }
+            if (t > 5) { selectEpisode(ep, false, t); }
             else { selectEpisode(ep, false); }
             return;
           }
