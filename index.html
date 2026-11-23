@@ -73,18 +73,22 @@
       .seg .clear { clear: both; }
 
       /* ----- prev / next ----- */
-      .navrow { margin-top: 14px; text-align: center; }
+      .navrow { margin-top: 16px; text-align: center; }
       .navrow button {
-        min-height: 44px;
-        min-width: 118px;
-        margin: 0 5px;
-        padding: 11px 18px;
+        width: 76px;
+        height: 48px;
+        min-height: 48px;
+        margin: 0 8px;
+        padding: 0;
         border: 1px solid #5a5a61;
         border-radius: 8px;
         background-color: #333338;
         color: #f2f2f4;
         font-family: inherit;
-        font-size: 15px;
+        font-size: 20px;
+        line-height: 48px;
+        text-align: center;
+        vertical-align: middle;
         cursor: pointer;
       }
       .navrow button.off { color: #76767e; }
@@ -192,14 +196,14 @@
       </div>
 
       <div class="seg">
-        <button type="button" id="btnOriginal" class="sel">Original score</button>
+        <button type="button" id="btnOriginal" class="sel">Original</button>
         <button type="button" id="btnFaulconer">Faulconer</button>
         <div class="clear"></div>
       </div>
 
       <div class="navrow">
-        <button type="button" id="btnPrev" class="off">Previous</button>
-        <button type="button" id="btnNext">Next</button>
+        <button type="button" id="btnPrev" class="off">⏮️</button>
+        <button type="button" id="btnNext">⏭️</button>
       </div>
 
       <div class="direct">
