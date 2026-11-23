@@ -149,8 +149,11 @@
         letter-spacing: 2px;
         color: #a7a7ae;
         text-transform: uppercase;
+        cursor: pointer;
       }
       .saga-head .range { float: right; letter-spacing: 0; font-weight: 400; }
+      .saga-body { display: none; }
+      .saga-body.open { display: block; }
       .ep-row {
         display: block;
         width: 100%;
@@ -248,6 +251,8 @@
       var current = 1;
       var triedFallback = false;
       var rowRefs = {};
+      var sagaBodies = [];
+      var openSagaIdx = -1;
       var RESUME_KEY = 'kaiLumiaResumeV1';
       var pendingSeek = null;
       var seekApplied = true;
@@ -388,11 +393,40 @@
         btnNext.className = (current >= TOTAL) ? 'off' : '';
       }
 
+      function sagaIndexForEpisode(n) {
+        var i;
+        for (i = 0; i < SAGAS.length; i++) {
+          if (n >= SAGAS[i].from && n <= SAGAS[i].to) return i;
+        }
+        return -1;
+      }
+
+      function setOpenSaga(idx) {
+        openSagaIdx = idx;
+        var i;
+        for (i = 0; i < sagaBodies.length; i++) {
+          if (sagaBodies[i]) {
+            sagaBodies[i].className = (i === idx) ? 'saga-body open' : 'saga-body';
+          }
+        }
+      }
+
+      function toggleSaga(idx) {
+        if (openSagaIdx === idx) { setOpenSaga(-1); }
+        else { setOpenSaga(idx); }
+      }
+
+      function openSagaForEpisode(n) {
+        var idx = sagaIndexForEpisode(n);
+        if (idx >= 0 && idx !== openSagaIdx) setOpenSaga(idx);
+      }
+
       function selectEpisode(n, autoplay, resumeTime) {
         if (n < 1 || n > TOTAL) return;
         current = n;
         triedFallback = false;
         hideError();
+        openSagaForEpisode(n);
         if (typeof resumeTime === 'number' && resumeTime > 5 && !isNaN(resumeTime)) {
           pendingSeek = resumeTime;
           seekApplied = false;
@@ -436,10 +470,11 @@
         var jump = document.getElementById('jumpNav');
         var s, n;
         for (s = 0; s < SAGAS.length; s++) {
-          (function (saga) {
+          (function (saga, idx) {
             var anchor = document.createElement('a');
             anchor.href = '#saga' + saga.from;
             anchor.innerHTML = saga.name;
+            anchor.onclick = function () { setOpenSaga(idx); };
             jump.appendChild(anchor);
 
             var head = document.createElement('div');
@@ -452,7 +487,13 @@
             var nameSpan = document.createElement('span');
             nameSpan.innerHTML = saga.name + ' Saga';
             head.appendChild(nameSpan);
+            head.onclick = function () { toggleSaga(idx); };
             list.appendChild(head);
+
+            var body = document.createElement('div');
+            body.className = (idx === openSagaIdx) ? 'saga-body open' : 'saga-body';
+            list.appendChild(body);
+            sagaBodies[idx] = body;
 
             for (n = saga.from; n <= saga.to; n++) {
               (function (num) {
@@ -470,11 +511,11 @@
                 b.appendChild(numSpan);
                 b.appendChild(ttlSpan);
                 b.onclick = function () { selectEpisode(num, true); };
-                list.appendChild(b);
+                body.appendChild(b);
                 rowRefs[num] = b;
               })(n);
             }
-          })(SAGAS[s]);
+          })(SAGAS[s], s);
         }
       }
 
@@ -559,6 +600,7 @@
           }
         }
         markSelected();
+        openSagaForEpisode(current);
       })();
     </script>
   </body>
